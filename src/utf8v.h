@@ -1,41 +1,52 @@
-#include <stdio.h>
-#include <stdint.h>
-
 #ifndef UTF8V_H
 #define UTF8V_H
 
+#include <stdio.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#define DEBUG 0
+
 #define debug_print(fmt, ...) \
-        do { if (DEBUG) fprintf(stderr, "%s:%d:%s(): " fmt, __FILE__, \
-                                __LINE__, __func__, __VA_ARGS__); } while (0)
+	do { \
+	if (DEBUG) \
+		fprintf(stderr, "%s:%d:%s(): " fmt, __FILE__, \
+	__LINE__, __func__, __VA_ARGS__); \
+	} while (0)
+
 
 /* utf8v_validate
  *
  * validate a byte 'array'
- * return 0 if is valid
- * return 1 if error
+ * return -1 if wrong size information
+ * return 1 if invalid byte sequences
+ * return 0 if sequence is valid.
  */
 
 int
-    utf8v_validate(uint8_t*, int);
+    utf8v_validate(unsigned char*, int);
 
 int
-    valid_first_range(uint8_t byte);
+    valid_first_range(unsigned char byte);
 
 int
-    valid_second_range(uint8_t byte, uint8_t second);
+    valid_second_range(unsigned char byte, unsigned char second);
 
 int
-    valid_third_range(uint8_t byte, uint8_t second, uint8_t third);
+    valid_third_range(unsigned char byte, unsigned char second, unsigned char third);
 
 int
-    valid_fourth_range(uint8_t byte,
-                       uint8_t second,
-                       uint8_t third,
-                       uint8_t fourth);
+    valid_fourth_range(unsigned char byte,
+                       unsigned char second,
+                       unsigned char third,
+                       unsigned char fourth);
 int
-    extract_sequence_length(uint8_t first_byte);
+    extract_sequence_length(unsigned char first_byte);
 
-#if TEST
+#ifdef __cplusplus
+}
+#endif
 
-#endif /* TEST */
 #endif /* UTF8V_H */

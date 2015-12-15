@@ -1,7 +1,0 @@
-language: c
-compiler:
-  - gcc
-  - clang
-script: make
-notifications:
-    irc: "irc.freenode.org#loogica"

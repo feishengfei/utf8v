@@ -1,0 +1,8 @@
+/build
+/install
+*.swo
+*.swp
+tags
+.svn
+*.log
+*.patch

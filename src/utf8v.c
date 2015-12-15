@@ -18,14 +18,14 @@
  */
 
 #define FIRST_UTF8_RANGE(value)                            \
-    (value <= 0x7F) ? 1 : 0
+    ((value <= 0x7F) ? 1 : 0)
 
 #define SECOND_UTF8_RANGE(value1, value2)                  \
-    (value1 >= 0xC2 && value1 <= 0xDF) &&                  \
-    (value2 >= 0x80 && value2 <= 0xBF) ? 1 : 0
+    (((value1 >= 0xC2 && value1 <= 0xDF) &&                  \
+    (value2 >= 0x80 && value2 <= 0xBF)) ? 1 : 0)
 
 #define THIRD_UTF8_RANGE(value1, value2, value3)           \
-    ((value1 == 0xE0                    &&                 \
+    (((value1 == 0xE0                    &&                 \
       value2 >= 0xA0 && value2 <= 0xBF  &&                 \
       value3 >= 0x80 && value3 <= 0xBF) ||                 \
      (value1 >= 0xE1 && value1 <= 0xEC  &&                 \
@@ -36,10 +36,10 @@
       value3 >= 0x80 && value2 <= 0xBF) ||                 \
      (value1 >= 0xEE && value1 <= 0xEF  &&                 \
       value2 >= 0x80 && value2 <= 0xBF  &&                 \
-      value3 >= 0x80 && value3 <= 0xBF)) ? 1 : 0
+      value3 >= 0x80 && value3 <= 0xBF)) ? 1 : 0)
 
 #define FOURTH_UTF8_RANGE(value1, value2, value3, value4)  \
-    ((value1 == 0xF0 &&                                    \
+    (((value1 == 0xF0 &&                                    \
       value2 >= 0x90 && value2 <= 0xBF  &&                 \
       value3 >= 0x80 && value3 <= 0xBF  &&                 \
       value4 >= 0x80 && value4 <= 0xBF) ||                 \
@@ -48,39 +48,39 @@
       value3 >= 0x80 && value3 <= 0xBF  &&                 \
       value4 >= 0x80 && value4 <= 0xBF) ||                 \
      (value1 == 0xF4                    &&                 \
-      value2 >= 0x80 && value2 <= 0xBF  &&                 \
+      value2 >= 0x80 && value2 <= 0x8F  &&                 \
       value3 >= 0x80 && value3 <= 0xBF  &&                 \
-      value4 >= 0x80 && value4 <= 0xBF)) ? 1 : 0
+      value4 >= 0x80 && value4 <= 0xBF)) ? 1 : 0)
 
 int
-    valid_first_range(uint8_t byte)
+    valid_first_range(unsigned char byte)
 {
     return FIRST_UTF8_RANGE(byte);
 }
 
 int
-    valid_second_range(uint8_t first, uint8_t second)
+    valid_second_range(unsigned char first, unsigned char second)
 {
     return SECOND_UTF8_RANGE(first, second);
 }
 
 int
-    valid_third_range(uint8_t first, uint8_t second, uint8_t third)
+    valid_third_range(unsigned char first, unsigned char second, unsigned char third)
 {
     return THIRD_UTF8_RANGE(first, second, third);
 }
 
 int
-    valid_fourth_range(uint8_t first,
-                       uint8_t second,
-                       uint8_t third,
-                       uint8_t fourth)
+    valid_fourth_range(unsigned char first,
+                       unsigned char second,
+                       unsigned char third,
+                       unsigned char fourth)
 {
     return FOURTH_UTF8_RANGE(first, second, third, fourth);
 }
 
 int
-    extract_sequence_length(uint8_t first_byte)
+    extract_sequence_length(unsigned char first_byte)
 {
     if (first_byte >> 3 == 0x1E) {
         return 3;
@@ -95,7 +95,7 @@ int
 }
 
 int
-    utf8v_validate(uint8_t *data, int size)
+    utf8v_validate(unsigned char *data, int size)
 {
     int i;
     int bytes_left = 0;
@@ -109,46 +109,64 @@ int
         switch (bytes_left) {
             case 0:
                 if (!FIRST_UTF8_RANGE(data[i])) {
+					debug_print("case 0:i=%d [0x%0x]\n", i, data[i]);
                     return 1;
                 }
+				else debug_print("!case 0:i=%d [0x%0x]\n", i, data[i]);
                 break;
             case 1:
                 if (i+1 >= size) {
+					debug_print("size 1:i=%d\n", i);
                     return -1;
                 }
                 if (!SECOND_UTF8_RANGE(data[i], data[i+1])) {
+					debug_print("case 1:i=%d [0x%0x][0x%0x]\n", i,
+							data[i], data[i+1]);
                     return 1;
                 } else {
+					debug_print("!case 1:i=%d [0x%0x][0x%0x]\n", i,
+							data[i], data[i+1]);
                     i += 1;
                 }
             break;
 
             case 2:
                 if (i+1 >= size || i+2 >= size) {
+					debug_print("size 2:i=%d\n", i);
                     return -1;
                 }
                 if (!THIRD_UTF8_RANGE(data[i], data[i+1], data[i+2])) {
+					debug_print("case 2:i=%d [0x%0x][0x%0x][0x%0x]\n", i,
+							data[i], data[i+1], data[i+2]);
                     return 1;
                 } else {
+					debug_print("!case 2:i=%d [0x%0x][0x%0x][0x%0x]\n", i,
+							data[i], data[i+1], data[i+2]);
                     i += 2;
                 }
             break;
 
             case 3:
                 if (i+1 >= size || i+2 >= size || i+3 >= size) {
+					debug_print("size 3:i=%d\n", i);
                     return -1;
                 }
                 if (!FOURTH_UTF8_RANGE(data[i],
                                        data[i+1],
                                        data[i+2],
                                        data[i+3])) {
+					debug_print("case 3:i=%d [0x%0x][0x%0x][0x%0x][0x%0x]\n", i,
+							data[i], data[i+1], data[i+2], data[i+3]);
                     return 1;
                 } else {
+					debug_print("!case 3:i=%d [0x%0x][0x%0x][0x%0x][0x%0x]\n", i,
+							data[i], data[i+1], data[i+2], data[i+3]);
                     i += 3;
                 }
             break;
 
             default:
+			debug_print("default:i=%d\n", i);
             return 1;
         }
 
